@@ -1,4 +1,4 @@
-"""main.py — Fiber EUR v1.3.2 Railway Entry Point
+"""main.py — Fiber EUR v1.4 Railway Entry Point
 ================================================
 EUR/USD Multi-Session Conservative Cascade Bot
 
@@ -59,7 +59,7 @@ def get_today_key() -> str:
     return datetime.now(sg_tz).strftime("%Y%m%d")
 
 
-def fresh_day_state(today_str: str, balance: float) -> dict:
+def fresh_day_state(today_str: str, balance: float, settings: dict | None = None) -> dict:
     state = {
         "date":                    today_str,
         "trades":                  0,
@@ -84,7 +84,7 @@ def fresh_day_state(today_str: str, balance: float) -> dict:
         "daily_risk_used_usd":     0.0,
         "has_open_trade":          False,
     }
-    for label in load_settings().get("sessions", {}).keys():
+    for label in (settings or load_settings()).get("sessions", {}).keys():
         state["session_trades_" + label] = 0
         state["session_wins_" + label] = 0
         state["session_losses_" + label] = 0
@@ -313,7 +313,7 @@ def main() -> None:
         max_losses_session   = settings.get("max_losing_trades_session", 2),
         max_losing_streak    = settings.get("circuit_breaker_streak", 2),
         sessions             = _sessions,
-        trading_day_start_hour = settings.get("db_cleanup_hour_sgt", 0),
+        trading_day_start_hour = int(settings.get("trading_day_start_hour_sgt", 0)),
     ))
 
     while True:
@@ -334,7 +334,7 @@ def main() -> None:
                     log.warning("Balance fetch error: %s", e)
                     balance = 0.0
                 log.info("📅 Balance: $%.2f", balance)
-                STATE = fresh_day_state(today, balance)
+                STATE = fresh_day_state(today, balance, settings)
 
             # Scheduled reports and DB retention
             run_scheduled_tasks(now, settings)

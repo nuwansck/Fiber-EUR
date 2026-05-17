@@ -1,4 +1,4 @@
-"""bot.py — Fiber EUR v1.3.1 Trade Engine
+"""bot.py — Fiber EUR v1.4 Trade Engine
 ========================================
 Pair:      EUR/USD only
 Strategy:  4-Layer Cascade (H4 macro → H1 stack → M15 impulse → M5 pullback)
@@ -77,13 +77,21 @@ _DEFAULT_SETTINGS = {
 
 
 def load_settings() -> dict:
+    """Return a fresh merged settings dict on every call.
+
+    Defaults from _DEFAULT_SETTINGS are overridden by settings.json values.
+    _DEFAULT_SETTINGS is never mutated, so keys absent from settings.json
+    always fall back to their coded defaults rather than retaining stale
+    values from a previous merge.
+    """
+    merged = dict(_DEFAULT_SETTINGS)
     try:
         with open(_SETTINGS_PATH) as f:
-            _DEFAULT_SETTINGS.update(json.load(f))
+            merged.update(json.load(f))
     except FileNotFoundError:
         with open(_SETTINGS_PATH, "w") as f:
             json.dump(_DEFAULT_SETTINGS, f, indent=2)
-    return _DEFAULT_SETTINGS
+    return merged
 
 
 def _build_assets(settings: dict) -> dict:
@@ -114,7 +122,10 @@ def _build_assets(settings: dict) -> dict:
 ASSETS = _build_assets(_DEFAULT_SETTINGS)
 
 def usd_to_sgd(amount: float) -> float:
-    """Account is natively SGD — balance/PnL from OANDA API is already in SGD."""
+    """Round to 2 dp.  Account currency is USD; no FX conversion is applied.
+    Function name retained for call-site compatibility — values passed to
+    Telegram are USD, not SGD.
+    """
     return round(amount, 2)
 
 

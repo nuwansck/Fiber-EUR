@@ -1,5 +1,5 @@
 """
-signals.py — Fiber EUR v1.3 Signal Engine
+signals.py — Fiber EUR v1.4 Signal Engine
 ==========================================
 Pair:      EUR/USD only
 Strategy:  4-Layer Cascade — all layers must pass for an entry
@@ -397,14 +397,16 @@ class SignalEngine:
         # ── V2: M30 COUNTER-TREND BLOCK ────────────────────────────────────
         m30_c, m30_h, m30_l, m30_o = self._fetch_candles(instrument, "M30", 10)
         if len(m30_c) >= 4:
+            _m30_body = float(cfg.get('m30_counter_body_ratio', 0.65))  # hoisted out of loop; set once for both directions
             counter_trend_count = 0
             for i in range(-3, 0):
                 c_rng = max(m30_h[i] - m30_l[i], 0.00001)
                 if direction == "BUY":
-                    _m30_body = float(cfg.get('m30_counter_body_ratio', 0.65))
-                if (m30_c[i] < m30_o[i]) and ((m30_h[i] - m30_c[i]) / c_rng >= _m30_body):
+                    # bearish candle with strong body = counter to BUY
+                    if (m30_c[i] < m30_o[i]) and ((m30_h[i] - m30_c[i]) / c_rng >= _m30_body):
                         counter_trend_count += 1
                 else:
+                    # bullish candle with strong body = counter to SELL
                     if (m30_c[i] > m30_o[i]) and ((m30_c[i] - m30_l[i]) / c_rng >= _m30_body):
                         counter_trend_count += 1
 
