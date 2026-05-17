@@ -1,10 +1,10 @@
-"""main.py — Fiber EUR v1.2 Railway Entry Point
+"""main.py — Fiber EUR v1.3 Railway Entry Point
 ================================================
-EUR/USD London + NY Conservative Cascade Bot
+EUR/USD Multi-Session Conservative Cascade Bot
 
 Sessions (SGT = UTC+8):
-  London  07:00–15:00 SGT  — EUR/USD prime window
-  NY      15:00–23:00 SGT  — USD flows
+  London      16:00–20:59 SGT
+  US          21:00–23:59 SGT
 
 Trade: SL 15 pip | TP 25 pip | R:R 1.67:1 | risk-based units ($75 risk/trade default)
 Signal: 4/4 layers must pass (H4 → H1 → M15 → M5)
@@ -60,7 +60,7 @@ def get_today_key() -> str:
 
 
 def fresh_day_state(today_str: str, balance: float) -> dict:
-    return {
+    state = {
         "date":                    today_str,
         "trades":                  0,
         "start_balance":           balance,
@@ -73,14 +73,7 @@ def fresh_day_state(today_str: str, balance: float) -> dict:
         "news_alerted":            {},
         "session_alerted":         {},
         "login_fail_alerted":      {},
-        "session_trades_London":   0,
-        "session_trades_NY":       0,
-        "session_wins_London":     0,
-        "session_wins_NY":         0,
-        "session_losses_London":   0,
-        "session_losses_NY":       0,
-        "session_pnl_London":      0.0,
-        "session_pnl_NY":          0.0,
+        # Per-session counters are added dynamically below.
         "last_trade_direction":    "",
         "last_trade_score":        0,
         "last_session":            "",
@@ -91,6 +84,12 @@ def fresh_day_state(today_str: str, balance: float) -> dict:
         "daily_risk_used_usd":     0.0,
         "has_open_trade":          False,
     }
+    for label in load_settings().get("sessions", {}).keys():
+        state["session_trades_" + label] = 0
+        state["session_wins_" + label] = 0
+        state["session_losses_" + label] = 0
+        state["session_pnl_" + label] = 0.0
+    return state
 
 
 def check_env_vars() -> bool:
@@ -229,15 +228,16 @@ def main() -> None:
     _s = load_settings()
     _sl_cfg  = _s.get("pair_sl_tp", {}).get("EUR_USD", {})
     _sess    = _s.get("sessions", {})
-    _lon, _ny = _sess.get("London", {}), _sess.get("NY", {})
     log.info("Pair: EUR/USD | SL=%dpip | TP=%dpip | RR=%.2f:1",
              _sl_cfg.get("sl_pips", 15), _sl_cfg.get("tp_pips", 25),
              round(_sl_cfg.get("tp_pips", 25) / _sl_cfg.get("sl_pips", 15), 2))
     log.info("Signal: %d/%d layers | H4 → H1 → M15 → M5",
              _s.get("signal_threshold", 4), _s.get("signal_threshold", 4))
-    log.info("London %02d:00–%02d:59 SGT | NY %02d:00–%02d:59 SGT",
-             _lon.get("start", 7), (_lon.get("end", 15) - 1) % 24,
-             _ny.get("start", 15), (_ny.get("end", 23) - 1) % 24)
+    _session_summary = " | ".join(
+        f"{label} {int(sess.get('start', 0)):02d}:00–{(int(sess.get('end', 0)) - 1) % 24:02d}:59 SGT"
+        for label, sess in _sess.items()
+    )
+    log.info("Sessions: %s", _session_summary)
     log.info("Goal: %d wins/day | %d trades | %d/session | %d loss/day | %d loss/session",
              _s.get("max_wins_day", 2), _s.get("max_trades_day", 4),
              _s.get("max_trades_session", 2),
@@ -286,8 +286,7 @@ def main() -> None:
         log.warning("Configured capital reference is $%.2f but broker balance is $%.2f", _capital_ref, _balance)
 
     _mode = "DEMO" if os.environ.get("OANDA_DEMO", "true").lower() != "false" else "LIVE"
-    _lon  = settings.get("sessions", {}).get("London", {})
-    _ny   = settings.get("sessions", {}).get("NY", {})
+    _sessions = settings.get("sessions", {})
     _sl   = settings.get("pair_sl_tp", {}).get("EUR_USD", {})
 
     alert.send(msg_startup(
@@ -308,10 +307,7 @@ def main() -> None:
         max_losses_day       = settings.get("max_losing_trades_day", 3),
         max_losses_session   = settings.get("max_losing_trades_session", 2),
         max_losing_streak    = settings.get("circuit_breaker_streak", 2),
-        london_start         = _lon.get("start", 7),
-        london_end           = _lon.get("end", 15),
-        ny_start             = _ny.get("start", 15),
-        ny_end               = _ny.get("end", 23),
+        sessions             = _sessions,
         trading_day_start_hour = settings.get("db_cleanup_hour_sgt", 0),
     ))
 

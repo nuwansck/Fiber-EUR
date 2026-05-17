@@ -1,4 +1,4 @@
-"""config.py — Fiber EUR v1.2
+"""config.py — Fiber EUR v1.3
 DEPRECATED — all configuration is now in settings.json.
 This file is kept as a stub to avoid import errors from any legacy references.
 Do not add new values here. Edit settings.json instead.

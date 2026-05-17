@@ -1,4 +1,4 @@
-"""config_loader.py — validated settings loader for Fiber EUR v1.2."""
+"""config_loader.py — validated settings loader for Fiber EUR v1.3."""
 from __future__ import annotations
 
 import json

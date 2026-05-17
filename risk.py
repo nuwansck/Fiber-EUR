@@ -1,4 +1,4 @@
-"""risk.py — Fiber EUR v1.2 risk and margin utilities.
+"""risk.py — Fiber EUR v1.3 risk and margin utilities.
 
 Keeps the original conservative EUR/USD strategy unchanged, but replaces blind
 fixed-size trading with money-risk sizing and daily risk controls.

@@ -1,4 +1,4 @@
-"""bot.py — Fiber EUR v1.2 Trade Engine
+"""bot.py — Fiber EUR v1.3 Trade Engine
 ========================================
 Pair:      EUR/USD only
 Strategy:  4-Layer Cascade (H4 macro → H1 stack → M15 impulse → M5 pullback)
@@ -8,8 +8,8 @@ TP:        25 pips  R:R 1.67:1
 Max dur:   45 minutes — then force-close
 
 Sessions (SGT = UTC+8):
-  London  07:00–15:00  max spread 1.2 pip
-  NY      15:00–23:00  max spread 1.5 pip
+  London      16:00–20:59  max spread 1.3 pip
+  US          21:00–23:59  max spread 1.3 pip
 
 Daily goal: 2 wins max · 4 trades max · 2 per session · 3 losses/day · 2 losses/session
 
@@ -52,7 +52,7 @@ _SETTINGS_PATH    = Path(__file__).parent / "settings.json"
 _DEFAULT_SETTINGS = {
     "signal_threshold":           4,
     "demo_mode":                  True,
-    "trade_units":                50000,  # fallback only; v1.2 uses risk_per_trade_usd
+    "trade_units":                50000,  # fallback only; v1.3 uses risk_per_trade_usd
     "risk_per_trade_usd":         75,
     "daily_risk_cap_usd":         225,
     "pip_value_per_10k":          1.0,
@@ -70,8 +70,8 @@ _DEFAULT_SETTINGS = {
         "EUR_USD": {"sl_pips": 15, "tp_pips": 25, "max_duration_min": 45}
     },
     "sessions": {
-        "London": {"start": 7,  "end": 15, "max_spread": 1.2},
-        "NY":     {"start": 15, "end": 23, "max_spread": 1.5},
+        "London": {"start": 16, "end": 21, "max_spread": 1.3},
+        "US":     {"start": 21, "end": 24, "max_spread": 1.3},
     },
 }
 
@@ -326,22 +326,19 @@ def detect_sl_tp_hits(state: dict, trader: OandaTrader, alert: TelegramAlert) ->
 
 
 def check_session_open_alerts(state: dict, alert: TelegramAlert, trader: OandaTrader, now: datetime, today: str) -> None:
-    """Send session open alert once per window per day."""
+    """Send session open alert once per window per day from settings.json."""
     _sess_cfg = load_settings().get("sessions", {})
-    windows = [
-        {
-            "start": _sess_cfg.get("London", {}).get("start", 7),
-            "label": "London",
-            "hours": f"{_sess_cfg.get('London', {}).get('start', 7):02d}:00"
-                     f"–{_sess_cfg.get('London', {}).get('end', 15):02d}:59 SGT",
-        },
-        {
-            "start": _sess_cfg.get("NY", {}).get("start", 15),
-            "label": "NY",
-            "hours": f"{_sess_cfg.get('NY', {}).get('start', 15):02d}:00"
-                     f"–{_sess_cfg.get('NY', {}).get('end', 23):02d}:59 SGT",
-        },
-    ]
+    windows = []
+    for label, sess in _sess_cfg.items():
+        start = int(sess.get("start", 0))
+        end = int(sess.get("end", 0))
+        display_end = (end - 1) % 24
+        windows.append({
+            "start": start,
+            "label": label,
+            "hours": f"{start:02d}:00–{display_end:02d}:59 SGT",
+        })
+
     for w in windows:
         if now.hour == w["start"]:
             akey = "session_open_" + today + "_" + w["label"]
@@ -376,7 +373,7 @@ def run_bot(state: dict) -> None:
 
     # Pull trade parameters from settings (single source of truth)
     pair_cfg         = settings.get("pair_sl_tp", {}).get("EUR_USD", {})
-    # v1.2: trade size is calculated per trade from risk_per_trade_usd.
+    # v1.3: trade size is calculated per trade from risk_per_trade_usd.
     FALLBACK_TRADE_SIZE = int(settings.get("trade_units", 50000))
     MAX_DURATION     = int(pair_cfg.get("max_duration_min", 45))
     COOLDOWN_MIN     = int(settings.get("loss_streak_cooldown_min", 30))
@@ -499,7 +496,7 @@ def run_bot(state: dict) -> None:
         log.info("LOSS CAP: %d/%d losses today — done for the day", losses_today, MAX_LOSSES_DAY)
         return
 
-    # v1.2 daily cumulative risk cap
+    # v1.3 daily cumulative risk cap
     _daily_cap = float(settings.get("daily_risk_cap_usd", 0))
     _daily_used = float(state.get("daily_risk_used_usd", 0.0))
     if _daily_cap > 0 and _daily_used >= _daily_cap:
@@ -571,7 +568,7 @@ def run_bot(state: dict) -> None:
         if score < threshold or direction == "NONE":
             continue
 
-        # Place trade — v1.2 risk-based sizing, daily risk cap, and margin guard
+        # Place trade — v1.3 risk-based sizing, daily risk cap, and margin guard
         use_sl = cfg["stop_pips"]
         use_tp = cfg["tp_pips"]
         account_summary = trader.get_account_summary()

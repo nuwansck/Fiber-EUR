@@ -1,4 +1,4 @@
-"""startup_checks.py — Fiber EUR v1.2 startup validation."""
+"""startup_checks.py — Fiber EUR v1.3 startup validation."""
 from __future__ import annotations
 
 import logging
@@ -34,16 +34,17 @@ def validate_settings(settings: dict) -> tuple[bool, list[str]]:
     if float(settings.get("daily_risk_cap_usd", 0)) < float(settings.get("risk_per_trade_usd", 0)):
         errors.append("daily_risk_cap_usd should be >= risk_per_trade_usd")
     if int(settings.get("max_concurrent_trades", 1)) != 1:
-        errors.append("Fiber EUR v1.2 is conservative: max_concurrent_trades must be 1")
+        errors.append("Fiber EUR v1.3 is conservative: max_concurrent_trades must be 1")
 
     sessions = settings.get("sessions", {})
-    for label in ("London", "NY"):
-        sess = sessions.get(label)
-        if not sess:
-            errors.append(f"missing session: {label}")
-            continue
+    if not sessions:
+        errors.append("missing sessions")
+    for label, sess in sessions.items():
         if "start" not in sess or "end" not in sess or "max_spread" not in sess:
             errors.append(f"session {label} must include start, end, max_spread")
+            continue
+        if not (0 <= int(sess["start"]) <= 23 and 1 <= int(sess["end"]) <= 24):
+            errors.append(f"session {label} start/end must be valid SGT hours")
 
     return not errors, errors
 

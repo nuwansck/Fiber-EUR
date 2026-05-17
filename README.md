@@ -1,20 +1,20 @@
-# Fiber EUR v1.2
+# Fiber EUR v1.3
 
-Fiber EUR v1.2 keeps the original EUR v1.0 conservative 4-layer cascade strategy:
+Fiber EUR v1.3 keeps the original EUR v1.0 conservative 4-layer cascade strategy:
 
 - H4 macro trend
 - H1 trend stack
 - M15 impulse confirmation
 - M5 pullback entry
 - EUR/USD only
-- London and New York sessions only
+- London and US sessions only
 - One open trade maximum
 
 ## What changed from v1.0
 
-v1.2 does **not** change the core strategy. It improves safety and production readiness:
+v1.3 does **not** change the core strategy. It improves safety and production readiness:
 
-| Area | v1.2 Improvement |
+| Area | v1.3 Improvement |
 |---|---|
 | Risk per trade | Added `$75` money-risk sizing |
 | Daily risk cap | Added `$225` daily exposure cap |
@@ -28,7 +28,7 @@ v1.2 does **not** change the core strategy. It improves safety and production re
 
 ## Risk settings
 
-Default v1.2 risk settings:
+Default v1.3 risk settings:
 
 ```json
 {
@@ -54,3 +54,13 @@ If your OANDA account currency is not USD, update `pip_value_per_10k` accordingl
 ## Important
 
 Start in demo mode first. Verify that the calculated units, margin guard, SL/TP, Telegram alerts, and reports are correct before using any live account.
+
+
+## Active trading sessions
+
+London + US only (SGT / UTC+8):
+
+- London: 16:00–20:59
+- US: 21:00–23:59
+
+Early Asia, Tokyo, and US Cont. are disabled for EUR/USD to avoid low-liquidity/noisy hours.

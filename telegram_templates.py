@@ -1,4 +1,4 @@
-"""telegram_templates.py — Fiber EUR v1.2
+"""telegram_templates.py — Fiber EUR v1.3
 AtomicFX-style: clean, state-change only, minimal noise.
 Visual format: richer cards, ascii bars,
 session/setup breakdowns, verdict system.
@@ -7,7 +7,7 @@ Mobile-safe: all lines ≤42 chars to prevent Telegram wrapping.
 from __future__ import annotations
 
 _DIV    = "─" * 22
-_BANNER = "🇪🇺 Fiber EUR v1.2 | EUR/USD"
+_BANNER = "🇪🇺 Fiber EUR v1.3 | EUR/USD"
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -17,8 +17,11 @@ def _dir_icon(d: str) -> str:
 
 def _session_icon(s: str) -> str:
     u = s.upper()
+    if "EARLY" in u or "ASIA" in u: return "✈️"
+    if "TOKYO" in u: return "🗼"
     if "LONDON" in u: return "🇬🇧"
-    if "NY"     in u: return "🗽"
+    if "US CONT" in u: return "🌙"
+    if "US" in u or "NY" in u: return "🚫"
     return "📊"
 
 def _pnl_icon(v: float) -> str:
@@ -35,10 +38,15 @@ def _clean_pair(s: str) -> str:
 
 def _clean_session(s: str) -> str:
     mapping = {
+        "Early Asia":    "Early Asia",
+        "Tokyo":         "Tokyo",
         "London":        "London",
         "London Window": "London",
-        "NY":            "NY",
-        "NY Window":     "NY",
+        "NY":            "US",
+        "NY Window":     "US",
+        "US":            "US",
+        "US Session":    "US",
+        "US Cont.":      "US Cont.",
     }
     return mapping.get(s, s)
 
@@ -415,6 +423,7 @@ def msg_startup(
     london_end=15,
     ny_start=15,
     ny_end=23,
+    sessions=None,
     trading_day_start_hour=0,
     risk_per_trade_usd=75,
     daily_risk_cap_usd=225,
@@ -423,8 +432,21 @@ def msg_startup(
     rr = round(tp_pips / sl_pips, 2)
     risk_pct = (risk_per_trade_usd / balance * 100) if balance else 0
     day_pct = (daily_risk_cap_usd / balance * 100) if balance else 0
-    london_display_end = (london_end - 1) % 24
-    ny_display_end = (ny_end - 1) % 24
+    if sessions is None:
+        sessions = {
+            "London": {"start": 16, "end": 21},
+            "US": {"start": 21, "end": 24},
+        }
+    session_lines = []
+    for label, sess in sessions.items():
+        start = int(sess.get("start", 0))
+        end = int(sess.get("end", 0))
+        display_end = (end - 1) % 24
+        icon = _session_icon(label)
+        session_lines.append(
+            f"{icon} {start:02d}:00–{display_end:02d}:59  {label:<11} max {max_trades_session}"
+        )
+    sessions_text = "\n".join(session_lines)
     return (
         f"🇪🇺 {version}\n"
         f"{_DIV}\n"
@@ -441,10 +463,7 @@ def msg_startup(
         f"Size:     auto up to {max_units:,} units\n"
         f"{_DIV}\n"
         f"Sessions (SGT = UTC+8)\n"
-        f"🇬🇧 {london_start:02d}:00–{london_display_end:02d}:59  London"
-        f"   max {max_trades_session}\n"
-        f"🗽 {ny_start:02d}:00–{ny_display_end:02d}:59  NY"
-        f"       max {max_trades_session}\n"
+        f"{sessions_text}\n"
         f"{_DIV}\n"
         f"Day reset: {trading_day_start_hour:02d}:00 SGT\n"
         f"Max: {max_trades_day} trades  ·  {max_wins_day} wins/day\n"
