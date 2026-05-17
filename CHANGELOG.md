@@ -1,6 +1,15 @@
 # Changelog
 
-## Fiber EUR v1.1
+## Fiber EUR v1.2
+
+
+### v1.2 verification/fixes
+
+- Fixed Telegram startup card top line from stale `Fiber EUR v1.0` to `Fiber EUR v1.2`.
+- Fixed all active runtime version references to `Fiber EUR v1.2`.
+- Startup Telegram now shows `$75/trade`, `$225/day` cap, calculated risk percentage, and auto-size max units.
+- Added startup log warning when broker balance differs from configured `capital_usd`.
+- Corrected session display to match the code's exclusive session end logic.
 
 ### Added
 
@@ -19,7 +28,7 @@
 
 ### Changed
 
-- Version changed from `Fiber EUR v1.0` to `Fiber EUR v1.1`.
+- Version changed from `Fiber EUR v1.0` to `Fiber EUR v1.2`.
 - Trade size is now calculated from money risk instead of blindly using fixed units.
 - Startup now validates core settings before trading.
 - Telegram trade-open alerts now use the actual calculated trade units.

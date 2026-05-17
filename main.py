@@ -1,4 +1,4 @@
-"""main.py — Fiber EUR v1.1 Railway Entry Point
+"""main.py — Fiber EUR v1.2 Railway Entry Point
 ================================================
 EUR/USD London + NY Session Scalp Bot
 
@@ -235,9 +235,9 @@ def main() -> None:
              round(_sl_cfg.get("tp_pips", 25) / _sl_cfg.get("sl_pips", 15), 2))
     log.info("Signal: %d/%d layers | H4 → H1 → M15 → M5",
              _s.get("signal_threshold", 4), _s.get("signal_threshold", 4))
-    log.info("London %02d:00–%02d:00 SGT | NY %02d:00–%02d:00 SGT",
-             _lon.get("start", 7), _lon.get("end", 15),
-             _ny.get("start", 15), _ny.get("end", 23))
+    log.info("London %02d:00–%02d:59 SGT | NY %02d:00–%02d:59 SGT",
+             _lon.get("start", 7), (_lon.get("end", 15) - 1) % 24,
+             _ny.get("start", 15), (_ny.get("end", 23) - 1) % 24)
     log.info("Goal: %d wins/day | %d trades | %d/session | %d loss/day | %d loss/session",
              _s.get("max_wins_day", 2), _s.get("max_trades_day", 4),
              _s.get("max_trades_session", 2),
@@ -278,6 +278,13 @@ def main() -> None:
     except Exception:
         _balance = 0.0
 
+    _capital_ref = float(settings.get("capital_usd", 0) or 0)
+    _risk_ref = float(settings.get("risk_per_trade_usd", 0) or 0)
+    if _balance and _risk_ref:
+        log.info("Actual risk %% based on live balance: %.2f%%/trade", (_risk_ref / _balance) * 100)
+    if _capital_ref and _balance and abs(_balance - _capital_ref) / _capital_ref > 0.05:
+        log.warning("Configured capital reference is $%.2f but broker balance is $%.2f", _capital_ref, _balance)
+
     _mode = "DEMO" if os.environ.get("OANDA_DEMO", "true").lower() != "false" else "LIVE"
     _lon  = settings.get("sessions", {}).get("London", {})
     _ny   = settings.get("sessions", {}).get("NY", {})
@@ -292,6 +299,9 @@ def main() -> None:
         sl_pips              = _sl.get("sl_pips", 15),
         tp_pips              = _sl.get("tp_pips", 25),
         units                = settings.get("max_units", settings.get("trade_units", 50000)),
+        risk_per_trade_usd   = float(settings.get("risk_per_trade_usd", 75)),
+        daily_risk_cap_usd   = float(settings.get("daily_risk_cap_usd", 225)),
+        max_units            = int(settings.get("max_units", settings.get("trade_units", 50000))),
         max_trades_day       = settings.get("max_trades_day", 4),
         max_wins_day         = settings.get("max_wins_day", 2),
         max_trades_session   = settings.get("max_trades_session", 2),

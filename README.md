@@ -1,6 +1,6 @@
-# Fiber EUR v1.1
+# Fiber EUR v1.2
 
-Fiber EUR v1.1 keeps the original EUR v1.0 conservative 4-layer cascade strategy:
+Fiber EUR v1.2 keeps the original EUR v1.0 conservative 4-layer cascade strategy:
 
 - H4 macro trend
 - H1 trend stack

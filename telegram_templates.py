@@ -7,7 +7,7 @@ Mobile-safe: all lines ≤42 chars to prevent Telegram wrapping.
 from __future__ import annotations
 
 _DIV    = "─" * 22
-_BANNER = "🇪🇺 Fiber EUR v1.0 | EUR/USD"
+_BANNER = "🇪🇺 Fiber EUR v1.2 | EUR/USD"
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -416,10 +416,17 @@ def msg_startup(
     ny_start=15,
     ny_end=23,
     trading_day_start_hour=0,
+    risk_per_trade_usd=75,
+    daily_risk_cap_usd=225,
+    max_units=50_000,
 ):
     rr = round(tp_pips / sl_pips, 2)
+    risk_pct = (risk_per_trade_usd / balance * 100) if balance else 0
+    day_pct = (daily_risk_cap_usd / balance * 100) if balance else 0
+    london_display_end = (london_end - 1) % 24
+    ny_display_end = (ny_end - 1) % 24
     return (
-        f"🇪🇺 Fiber EUR v1.0\n"
+        f"🇪🇺 {version}\n"
         f"{_DIV}\n"
         f"🚀 {version} started\n"
         f"{_DIV}\n"
@@ -429,12 +436,14 @@ def msg_startup(
         f"          H4 → H1 → M15 → M5\n"
         f"Signal:   {signal_threshold}/{signal_threshold} — all layers pass\n"
         f"Trade:    SL {sl_pips}p  |  TP {tp_pips}p  |  RR {rr}:1\n"
-        f"Size:     {units:,} units\n"
+        f"Risk:     ${risk_per_trade_usd:,.0f}/trade  |  Cap ${daily_risk_cap_usd:,.0f}/day\n"
+        f"Risk %:   {risk_pct:.1f}%/trade  |  {day_pct:.1f}%/day\n"
+        f"Size:     auto up to {max_units:,} units\n"
         f"{_DIV}\n"
         f"Sessions (SGT = UTC+8)\n"
-        f"🇬🇧 {london_start:02d}:00–{london_end:02d}:59  London"
+        f"🇬🇧 {london_start:02d}:00–{london_display_end:02d}:59  London"
         f"   max {max_trades_session}\n"
-        f"🗽 {ny_start:02d}:00–{ny_end:02d}:59  NY"
+        f"🗽 {ny_start:02d}:00–{ny_display_end:02d}:59  NY"
         f"       max {max_trades_session}\n"
         f"{_DIV}\n"
         f"Day reset: {trading_day_start_hour:02d}:00 SGT\n"
