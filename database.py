@@ -1,7 +1,7 @@
-"""database.py — Fiber EUR v1.0 SQLite Persistence
+"""database.py — Fiber EUR v1.2 SQLite Persistence
 Lightweight SQLite persistence for observability and durability.
 Does not alter signal generation or trade decision logic.
-Matches Fiber EUR v1.0 database structure.
+Matches Fiber EUR v1.2 database structure.
 """
 from __future__ import annotations
 

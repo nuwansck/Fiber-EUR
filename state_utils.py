@@ -1,5 +1,5 @@
-"""state_utils.py — Fiber EUR v1.0 State Persistence Utilities
-State persistence utilities for Fiber EUR v1.0.
+"""state_utils.py — Fiber EUR v1.2 State Persistence Utilities
+State persistence utilities for Fiber EUR v1.2.
 """
 from __future__ import annotations
 

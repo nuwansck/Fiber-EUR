@@ -1,6 +1,6 @@
-"""telegram_templates.py — Fiber EUR v1.0
+"""telegram_templates.py — Fiber EUR v1.2
 AtomicFX-style: clean, state-change only, minimal noise.
-Visual format ported from Cable AI Scalp v1.7 — richer cards, ascii bars,
+Visual format: richer cards, ascii bars,
 session/setup breakdowns, verdict system.
 Mobile-safe: all lines ≤42 chars to prevent Telegram wrapping.
 """

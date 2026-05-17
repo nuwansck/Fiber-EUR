@@ -1,6 +1,6 @@
 """main.py — Fiber EUR v1.2 Railway Entry Point
 ================================================
-EUR/USD London + NY Session Scalp Bot
+EUR/USD London + NY Conservative Cascade Bot
 
 Sessions (SGT = UTC+8):
   London  07:00–15:00 SGT  — EUR/USD prime window

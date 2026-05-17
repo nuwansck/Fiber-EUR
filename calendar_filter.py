@@ -1,4 +1,4 @@
-"""calendar_filter.py — Fiber EUR v1.0 Economic Calendar Filter
+"""calendar_filter.py — Fiber EUR v1.2 Economic Calendar Filter
 Fetches high-impact events from ForexFactory (auto-updating weekly feed).
 Relevant currencies: USD and EUR only (matches EUR/USD pair).
 
@@ -198,6 +198,9 @@ class EconomicCalendar:
         now_sg    = datetime.now(self.sg_tz)
         today_str = now_sg.strftime("%Y-%m-%d")
         events    = self._fetch_events()
+
+        if events is None:
+            return "Calendar unavailable — fail-closed news protection active"
 
         today_events = [e for e in events if e.get("date", "")[:10] == today_str]
 

@@ -1,4 +1,4 @@
-"""bot.py — Fiber EUR v1.0 Trade Engine
+"""bot.py — Fiber EUR v1.2 Trade Engine
 ========================================
 Pair:      EUR/USD only
 Strategy:  4-Layer Cascade (H4 macro → H1 stack → M15 impulse → M5 pullback)
@@ -52,7 +52,7 @@ _SETTINGS_PATH    = Path(__file__).parent / "settings.json"
 _DEFAULT_SETTINGS = {
     "signal_threshold":           4,
     "demo_mode":                  True,
-    "trade_units":                50000,  # fallback only; v1.1 uses risk_per_trade_usd
+    "trade_units":                50000,  # fallback only; v1.2 uses risk_per_trade_usd
     "risk_per_trade_usd":         75,
     "daily_risk_cap_usd":         225,
     "pip_value_per_10k":          1.0,
@@ -145,7 +145,7 @@ def get_h4_direction() -> str | None:
         seed = sum(closes[:_h4_slow]) / _h4_slow
         ema  = seed
         mult = 2 / (_h4_slow + 1)
-        for c in closes[50:]:
+        for c in closes[_h4_slow:]:
             ema = (c - ema) * mult + ema
 
         last3 = closes[-3:]
@@ -228,10 +228,11 @@ def detect_sl_tp_hits(state: dict, trader: OandaTrader, alert: TelegramAlert) ->
                 losses      = state.get("losses", 0)
 
                 state["daily_pnl"] = state.get("daily_pnl", 0.0) + pnl_usd
-                # Release reserved daily risk after trade closure. The cap controls exposure, not realized P/L.
+                # Daily risk cap is cumulative for the trading day.
+                # Do NOT subtract closed-trade risk here; it resets only on the next day.
+                # This keeps $225/day as a true max planned risk for a $75/trade setup.
                 _reserved = float(state.get("risk_reserved_" + name, 0.0))
                 if _reserved:
-                    state["daily_risk_used_usd"] = max(0.0, round(float(state.get("daily_risk_used_usd", 0.0)) - _reserved, 2))
                     state.pop("risk_reserved_" + name, None)
 
                 if pnl_usd < 0:
@@ -375,7 +376,7 @@ def run_bot(state: dict) -> None:
 
     # Pull trade parameters from settings (single source of truth)
     pair_cfg         = settings.get("pair_sl_tp", {}).get("EUR_USD", {})
-    # v1.1: trade size is calculated per trade from risk_per_trade_usd.
+    # v1.2: trade size is calculated per trade from risk_per_trade_usd.
     FALLBACK_TRADE_SIZE = int(settings.get("trade_units", 50000))
     MAX_DURATION     = int(pair_cfg.get("max_duration_min", 45))
     COOLDOWN_MIN     = int(settings.get("loss_streak_cooldown_min", 30))
@@ -498,7 +499,7 @@ def run_bot(state: dict) -> None:
         log.info("LOSS CAP: %d/%d losses today — done for the day", losses_today, MAX_LOSSES_DAY)
         return
 
-    # v1.1 daily risk exposure cap
+    # v1.2 daily cumulative risk cap
     _daily_cap = float(settings.get("daily_risk_cap_usd", 0))
     _daily_used = float(state.get("daily_risk_used_usd", 0.0))
     if _daily_cap > 0 and _daily_used >= _daily_cap:
@@ -570,7 +571,7 @@ def run_bot(state: dict) -> None:
         if score < threshold or direction == "NONE":
             continue
 
-        # Place trade — v1.1 risk-based sizing, daily risk cap, and margin guard
+        # Place trade — v1.2 risk-based sizing, daily risk cap, and margin guard
         use_sl = cfg["stop_pips"]
         use_tp = cfg["tp_pips"]
         account_summary = trader.get_account_summary()
@@ -637,7 +638,7 @@ def run_bot(state: dict) -> None:
                 trades_today=state["trades"],
                 units=TRADE_SIZE,
             )
-            log.info("%s: PLACED %s | SL=SGD%s  TP=SGD%s", name, direction, sl_sgd, tp_sgd)
+            log.info("%s: PLACED %s | est risk=$%s  est TP=$%s", name, direction, sl_sgd, tp_sgd)
         else:
             set_cooldown(state, name)
             log.warning("%s: order failed — %s", name, result_order.get("error", ""))

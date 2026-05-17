@@ -12,9 +12,9 @@ Fiber EUR v1.2 keeps the original EUR v1.0 conservative 4-layer cascade strategy
 
 ## What changed from v1.0
 
-v1.1 does **not** change the core strategy. It improves safety and production readiness:
+v1.2 does **not** change the core strategy. It improves safety and production readiness:
 
-| Area | v1.1 Improvement |
+| Area | v1.2 Improvement |
 |---|---|
 | Risk per trade | Added `$75` money-risk sizing |
 | Daily risk cap | Added `$225` daily exposure cap |
@@ -28,7 +28,7 @@ v1.1 does **not** change the core strategy. It improves safety and production re
 
 ## Risk settings
 
-Default v1.1 risk settings:
+Default v1.2 risk settings:
 
 ```json
 {

@@ -1,5 +1,5 @@
-"""reporting.py — Fiber EUR v1.0 Telegram Performance Reports
-Fiber EUR v1.0 reporting — three scheduled reports.
+"""reporting.py — Fiber EUR v1.2 Telegram Performance Reports
+Fiber EUR v1.2 reporting — three scheduled reports.
 
 Three scheduled reports, all reading from /data/trade_history.json
 on the Railway persistent volume. 90-day rolling retention window.

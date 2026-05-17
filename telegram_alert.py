@@ -1,4 +1,4 @@
-"""telegram_alert.py — Fiber EUR v1.0 Telegram Dispatcher
+"""telegram_alert.py — Fiber EUR v1.2 Telegram Dispatcher
 Sends all Telegram alerts. Uses telegram_templates.py for message formatting.
 send() passes messages through as-is — templates own the banner and structure.
 """
