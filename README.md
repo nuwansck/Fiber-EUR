@@ -1,6 +1,6 @@
-# Fiber EUR v1.3
+# Fiber EUR v1.3.1
 
-Fiber EUR v1.3 keeps the original EUR v1.0 conservative 4-layer cascade strategy:
+Fiber EUR v1.3.1 keeps the original EUR v1.0 conservative 4-layer cascade strategy:
 
 - H4 macro trend
 - H1 trend stack
@@ -64,3 +64,14 @@ London + US only (SGT / UTC+8):
 - US: 21:00–23:59
 
 Early Asia, Tokyo, and US Cont. are disabled for EUR/USD to avoid low-liquidity/noisy hours.
+
+## v1.3.1 weekend guard
+
+This build trades/scans on **SGT Monday–Friday only**. Sunday and Saturday session-open alerts are disabled even if the clock matches a configured session window.
+
+Active sessions remain:
+
+```text
+London 16:00–20:59 SGT
+US     21:00–23:59 SGT
+```

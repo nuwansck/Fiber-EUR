@@ -1,4 +1,4 @@
-"""bot.py — Fiber EUR v1.3 Trade Engine
+"""bot.py — Fiber EUR v1.3.1 Trade Engine
 ========================================
 Pair:      EUR/USD only
 Strategy:  4-Layer Cascade (H4 macro → H1 stack → M15 impulse → M5 pullback)
@@ -170,6 +170,19 @@ def is_in_session(hour: int, cfg: dict) -> bool:
     return any(s["start"] <= hour < s["end"] for s in cfg["sessions"])
 
 
+def is_trading_day(now: datetime, settings: dict | None = None) -> bool:
+    """Return True only on allowed SGT weekdays. Default: Mon-Fri.
+
+    This prevents Sunday/weekend session-open alerts and scans even when
+    the clock matches a configured session window.
+    """
+    settings = settings or load_settings()
+    if not bool(settings.get("trade_weekdays_only", True)):
+        return True
+    allowed = settings.get("trading_weekdays_sgt", [0, 1, 2, 3, 4])
+    return now.weekday() in [int(x) for x in allowed]
+
+
 def set_cooldown(state: dict, name: str) -> None:
     if "cooldowns" not in state:
         state["cooldowns"] = {}
@@ -327,7 +340,11 @@ def detect_sl_tp_hits(state: dict, trader: OandaTrader, alert: TelegramAlert) ->
 
 def check_session_open_alerts(state: dict, alert: TelegramAlert, trader: OandaTrader, now: datetime, today: str) -> None:
     """Send session open alert once per window per day from settings.json."""
-    _sess_cfg = load_settings().get("sessions", {})
+    _settings = load_settings()
+    if not is_trading_day(now, _settings):
+        log.info("Weekend/non-trading day — session open alerts disabled (%s)", now.strftime("%A"))
+        return
+    _sess_cfg = _settings.get("sessions", {})
     windows = []
     for label, sess in _sess_cfg.items():
         start = int(sess.get("start", 0))
@@ -390,6 +407,10 @@ def run_bot(state: dict) -> None:
     calendar = CalendarFilter()
 
     log.info("Scan at %s SGT", now.strftime("%H:%M:%S"))
+
+    if not is_trading_day(now, settings):
+        log.info("Weekend/non-trading day (%s SGT) — no scan / no session alert", now.strftime("%A"))
+        return
 
     trader_for_alerts = OandaTrader(demo=settings["demo_mode"])
     check_session_open_alerts(state, alert, trader_for_alerts, now, today)

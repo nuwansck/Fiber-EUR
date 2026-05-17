@@ -1,3 +1,11 @@
+## Fiber EUR v1.3.1
+
+### Weekend guard fix
+- Added `trade_weekdays_only: true` and `trading_weekdays_sgt: [0,1,2,3,4]`.
+- Disabled Sunday/Saturday scan cycles before OANDA login and before session-open Telegram alerts.
+- Updated Telegram startup card to show `Trading days: Mon–Fri only`.
+- Fixed duplicate `SGT SGT` in session-open Telegram messages.
+
 
 ## London + US Session Update
 

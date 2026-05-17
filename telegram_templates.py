@@ -1,4 +1,4 @@
-"""telegram_templates.py — Fiber EUR v1.3
+"""telegram_templates.py — Fiber EUR v1.3.1
 AtomicFX-style: clean, state-change only, minimal noise.
 Visual format: richer cards, ascii bars,
 session/setup breakdowns, verdict system.
@@ -7,7 +7,7 @@ Mobile-safe: all lines ≤42 chars to prevent Telegram wrapping.
 from __future__ import annotations
 
 _DIV    = "─" * 22
-_BANNER = "🇪🇺 Fiber EUR v1.3 | EUR/USD"
+_BANNER = "🇪🇺 Fiber EUR v1.3.1 | EUR/USD"
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -331,7 +331,7 @@ def msg_session_open(session_name, session_hours_sgt, trades_today, daily_pnl):
     pnl_str = f"${daily_pnl:+.2f}" if trades_today > 0 else "—"
     return (
         f"{icon} {session_name} Open"
-        f"  {session_hours_sgt} SGT\n"
+        f"  {session_hours_sgt}\n"
         f"{_DIV}\n"
         f"Today:  {trades_today} trade(s)  {pnl_str}\n"
         f"Scanning EUR/USD for setup..."
@@ -464,6 +464,7 @@ def msg_startup(
         f"{_DIV}\n"
         f"Sessions (SGT = UTC+8)\n"
         f"{sessions_text}\n"
+        f"Trading days: Mon–Fri only\n"
         f"{_DIV}\n"
         f"Day reset: {trading_day_start_hour:02d}:00 SGT\n"
         f"Max: {max_trades_day} trades  ·  {max_wins_day} wins/day\n"

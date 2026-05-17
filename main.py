@@ -1,4 +1,4 @@
-"""main.py — Fiber EUR v1.3 Railway Entry Point
+"""main.py — Fiber EUR v1.3.1 Railway Entry Point
 ================================================
 EUR/USD Multi-Session Conservative Cascade Bot
 
@@ -27,7 +27,7 @@ from datetime import datetime
 
 import pytz
 
-from bot            import run_bot, ASSETS, is_in_session, load_settings, _build_assets
+from bot            import run_bot, ASSETS, is_in_session, is_trading_day, load_settings, _build_assets
 from database       import Database
 from oanda_trader   import OandaTrader
 from reporting      import (
@@ -113,7 +113,10 @@ def check_env_vars() -> bool:
 
 
 def is_any_session_now() -> bool:
-    hour = datetime.now(sg_tz).hour
+    now = datetime.now(sg_tz)
+    if not is_trading_day(now, load_settings()):
+        return False
+    hour = now.hour
     return any(is_in_session(hour, cfg) for cfg in ASSETS.values())
 
 
@@ -238,6 +241,8 @@ def main() -> None:
         for label, sess in _sess.items()
     )
     log.info("Sessions: %s", _session_summary)
+    if settings.get("trade_weekdays_only", True):
+        log.info("Trading days: Mon-Fri only (SGT) — weekend scans/session alerts disabled")
     log.info("Goal: %d wins/day | %d trades | %d/session | %d loss/day | %d loss/session",
              _s.get("max_wins_day", 2), _s.get("max_trades_day", 4),
              _s.get("max_trades_session", 2),
