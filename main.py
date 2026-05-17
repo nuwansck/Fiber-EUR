@@ -1,4 +1,4 @@
-"""main.py — Fiber EUR v1.3.1 Railway Entry Point
+"""main.py — Fiber EUR v1.3.2 Railway Entry Point
 ================================================
 EUR/USD Multi-Session Conservative Cascade Bot
 
@@ -241,7 +241,7 @@ def main() -> None:
         for label, sess in _sess.items()
     )
     log.info("Sessions: %s", _session_summary)
-    if settings.get("trade_weekdays_only", True):
+    if _s.get("trade_weekdays_only", True):
         log.info("Trading days: Mon-Fri only (SGT) — weekend scans/session alerts disabled")
     log.info("Goal: %d wins/day | %d trades | %d/session | %d loss/day | %d loss/session",
              _s.get("max_wins_day", 2), _s.get("max_trades_day", 4),

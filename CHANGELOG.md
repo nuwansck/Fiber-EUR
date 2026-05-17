@@ -1,4 +1,12 @@
-## Fiber EUR v1.3.1
+# Changelog
+
+## Fiber EUR v1.3.2
+- Hotfix: corrected startup weekday logging guard in `main.py` to use loaded `_s` settings before the later `settings = load_settings()` assignment.
+- Keeps London + US sessions only.
+- Keeps Mon-Fri only weekday guard for scans/session alerts.
+- Keeps max spread at 1.3 pip.
+
+## Fiber EUR v1.3.2
 
 ### Weekend guard fix
 - Added `trade_weekdays_only: true` and `trading_weekdays_sgt: [0,1,2,3,4]`.
