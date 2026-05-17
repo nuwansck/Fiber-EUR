@@ -1,2 +1,2 @@
 """Project version."""
-VERSION = "Fiber EUR v1.4"
+VERSION = "Fiber EUR v1.5"

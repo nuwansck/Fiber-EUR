@@ -1,5 +1,5 @@
-"""reporting.py — Fiber EUR v1.3 Telegram Performance Reports
-Fiber EUR v1.3 reporting — three scheduled reports.
+"""reporting.py — Fiber EUR v1.5 Telegram Performance Reports
+Fiber EUR v1.5 reporting — three scheduled reports.
 
 Three scheduled reports, all reading from /data/trade_history.json
 on the Railway persistent volume. 90-day rolling retention window.
@@ -410,7 +410,7 @@ def send_monthly_csv_export() -> None:
         wr      = round(wins / len(trades) * 100, 1) if trades else 0
 
         caption = (
-            f"📊 Fiber EUR v1.3 — Cumulative Trade Log\n"
+            f"📊 Fiber EUR v1.5 — Cumulative Trade Log\n"
             f"Trades: {len(trades)}  ({wins}W / {losses}L)  WR {wr}%\n"
             f"Net P&L: ${net_pnl:+.2f}\n"
             f"Generated: {now.strftime('%d %b %Y %H:%M SGT')}"
@@ -509,7 +509,7 @@ def send_weekly_export() -> None:
         tmp_path.write_bytes(csv_bytes)
 
         caption = (
-            f"📎 Fiber EUR v1.3 — Weekly Trade Log\n"
+            f"📎 Fiber EUR v1.5 — Weekly Trade Log\n"
             f"Week: {start.strftime('%d %b')} – {(now - __import__('datetime').timedelta(days=1)).strftime('%d %b %Y')}\n"
             f"Trades: {len(trades)}  ({wins}W / {losses}L)  WR {wr}%\n"
             f"Net P&L: ${net_pnl:+.2f}\n"

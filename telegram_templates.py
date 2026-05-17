@@ -1,4 +1,4 @@
-"""telegram_templates.py — Fiber EUR v1.3.2
+"""telegram_templates.py — Fiber EUR v1.5
 AtomicFX-style: clean, state-change only, minimal noise.
 Visual format: richer cards, ascii bars,
 session/setup breakdowns, verdict system.
@@ -7,7 +7,7 @@ Mobile-safe: all lines ≤42 chars to prevent Telegram wrapping.
 from __future__ import annotations
 
 _DIV    = "─" * 22
-_BANNER = "🇪🇺 Fiber EUR v1.3.2 | EUR/USD"
+_BANNER = "🇪🇺 Fiber EUR v1.5 | EUR/USD"
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────

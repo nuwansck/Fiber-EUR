@@ -1,4 +1,4 @@
-"""calendar_filter.py — Fiber EUR v1.3 Economic Calendar Filter
+"""calendar_filter.py — Fiber EUR v1.5 Economic Calendar Filter
 Fetches high-impact events from ForexFactory (auto-updating weekly feed).
 Relevant currencies: USD and EUR only (matches EUR/USD pair).
 

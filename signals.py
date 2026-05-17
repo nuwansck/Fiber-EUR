@@ -1,5 +1,5 @@
 """
-signals.py — Fiber EUR v1.4 Signal Engine
+signals.py — Fiber EUR v1.5 Signal Engine
 ==========================================
 Pair:      EUR/USD only
 Strategy:  4-Layer Cascade — all layers must pass for an entry

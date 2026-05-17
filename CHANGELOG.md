@@ -1,82 +1,74 @@
 # Changelog
 
+## Fiber EUR v1.5
+
+### Bug fixes
+- **CRITICAL — `now` undefined in `detect_sl_tp_hits`** (`bot.py`): The trade history
+  write block used `now.strftime(...)` but `now` is not defined in `detect_sl_tp_hits`'s
+  scope. The `NameError` was silently caught, meaning trade history silently failed to
+  write on every closed trade since v1.0. Fixed by defining `_hist_now = datetime.now(sg_tz)`
+  locally at the start of the history block.
+
+### Version housekeeping
+- All docstrings, inline comments, and user-visible strings updated to v1.5 throughout
+  every file: `bot.py`, `main.py`, `signals.py`, `calendar_filter.py`, `config.py`,
+  `config_loader.py`, `database.py`, `oanda_trader.py`, `reporting.py`, `risk.py`,
+  `startup_checks.py`, `state_utils.py`, `telegram_alert.py`, `telegram_templates.py`,
+  `README.md`, `settings.json`, `settings.json.example`, `version.py`.
+- `_BANNER` in `telegram_templates.py` now reads `🇪🇺 Fiber EUR v1.5 | EUR/USD`
+  (was `v1.3.2` — shown on every Telegram message).
+- CSV report captions in `reporting.py` updated to `v1.5`.
+- `startup_checks.py` error message updated to `v1.5`.
+- Misleading `SGD` label removed from `bot.py` log line and module-level comment
+  (account currency is USD; no FX conversion occurs).
+
+---
+
 ## Fiber EUR v1.4
 
 ### Bug fixes
-- **CRITICAL — V2 counter-trend NameError** (`signals.py`): `_m30_body` was only assigned inside `if direction == "BUY":`, causing a `NameError` on every SELL trade that reached the V2 veto. All SELL signals silently crashed the scan cycle. Fixed by hoisting `_m30_body = float(cfg.get(...))` to before the loop so it is always defined for both directions.
-- **CRITICAL — V2 counter-trend logic** (`signals.py`): Both the bearish-candle check and the bullish-candle check ran for every iteration regardless of direction. For BUY, bullish (with-trend) candles were incorrectly counted as counter-trend. For SELL, bearish (with-trend) candles were incorrectly counted. Fixed with explicit `if direction == "BUY": ... else: ...` guards so each direction counts only the opposing candle type.
-- **`load_settings()` global mutation** (`bot.py`): `_DEFAULT_SETTINGS.update(json.load(f))` permanently mutated the module-level default dict; keys removed from `settings.json` would silently retain their old value for the process lifetime. Fixed to return a fresh merged copy on every call — `_DEFAULT_SETTINGS` is no longer mutated.
-- **`usd_to_sgd()` misleading docstring** (`bot.py`): Comment said "Account is natively SGD" but account currency is USD. Function is a USD rounding helper. Docstring corrected; function name retained for call-site compatibility.
-- **Wrong settings key for `trading_day_start_hour`** (`main.py`): `msg_startup()` was passed `settings.get("db_cleanup_hour_sgt")` for the `trading_day_start_hour` parameter. Coincidentally produced the correct value (0) but from the wrong key. Fixed to use new dedicated key `trading_day_start_hour_sgt`.
-- **`fresh_day_state()` redundant `load_settings()` call** (`main.py`): Function reloaded settings from disk internally even when the caller already had a loaded copy. Fixed to accept an optional `settings` parameter and use it when provided.
+- **CRITICAL — V2 counter-trend NameError** (`signals.py`): `_m30_body` was only assigned
+  inside `if direction == "BUY":`, causing a `NameError` on every SELL trade that reached
+  V2. Fixed by hoisting above the loop.
+- **CRITICAL — V2 counter-trend logic** (`signals.py`): Both candle checks ran regardless
+  of direction. Fixed with explicit direction guards so each direction counts only opposing
+  candle type.
+- **`load_settings()` global mutation** (`bot.py`): `_DEFAULT_SETTINGS.update(...)` mutated
+  the module-level dict permanently. Fixed to return a fresh merged copy each call.
+- **`usd_to_sgd()` misleading docstring** (`bot.py`): Account is USD. Docstring corrected.
+- **Wrong settings key for `trading_day_start_hour`** (`main.py`): Was reading
+  `db_cleanup_hour_sgt`. Fixed to use dedicated `trading_day_start_hour_sgt` key.
+- **`fresh_day_state()` redundant `load_settings()` call** (`main.py`): Fixed to accept
+  optional `settings` parameter.
 
 ### Version housekeeping
-- `version.py` → `Fiber EUR v1.4`
-- `bot.py` docstring → v1.4
-- `main.py` docstring → v1.4
-- `signals.py` docstring → v1.4
-- `settings.json` `bot_name` → `"Fiber EUR v1.4"`
-- `settings.json` `config_version` → `"1.4"`
-- `settings.json` new key: `trading_day_start_hour_sgt: 0`
-- `settings.json.example` kept in sync
+- `version.py`, `bot.py`, `main.py`, `signals.py` docstrings → v1.4.
+- `settings.json` `bot_name` → `"Fiber EUR v1.4"`, `config_version` → `"1.4"`.
+- New key: `trading_day_start_hour_sgt: 0`.
 
 ---
 
 ## Fiber EUR v1.3.2
 
-### Hotfix
-- Corrected startup weekday logging guard in `main.py` to use loaded `_s` settings before the later `settings = load_settings()` assignment.
-- Keeps London + US sessions only.
-- Keeps Mon-Fri only weekday guard for scans/session alerts.
-- Keeps max spread at 1.3 pip.
-
-### Weekend guard fix
+### Hotfix + weekend guard
+- Corrected startup weekday logging guard in `main.py`.
 - Added `trade_weekdays_only: true` and `trading_weekdays_sgt: [0,1,2,3,4]`.
-- Disabled Sunday/Saturday scan cycles before OANDA login and before session-open Telegram alerts.
-- Updated Telegram startup card to show `Trading days: Mon–Fri only`.
+- Disabled Sunday/Saturday scan cycles and session-open alerts.
 - Fixed duplicate `SGT SGT` in session-open Telegram messages.
 
 ---
 
 ## Fiber EUR v1.3
 
-### Session update
-- Disabled Early Asia, Tokyo, and US Cont. sessions for EUR/USD.
-- Kept only the recommended high-liquidity SGT windows: London 16:00–20:59 and US 21:00–23:59.
-- Updated settings, startup Telegram card/session template, bot defaults, and main startup documentation.
-- Kept max spread at 1.3 pip for both active sessions.
-
-### v1.3 verification/fixes
-- Fixed Telegram startup card top line from stale `Fiber EUR v1.0` to `Fiber EUR v1.3`.
-- Startup Telegram now shows `$75/trade`, `$225/day` cap, calculated risk percentage, and auto-size max units.
-- Added startup log warning when broker balance differs from configured `capital_usd`.
-- Corrected session display to match the code's exclusive session end logic.
-
 ### Added
-- Risk-based position sizing using `risk_per_trade_usd`.
-- `$75` default risk per trade for `$5,000` capital.
-- `$225` daily risk cap.
-- `risk.py` for unit sizing, risk cap checks, and margin guard.
-- `startup_checks.py` for settings and environment validation.
-- `reconcile_state.py` to sync local state with OANDA open positions.
-- `logging_utils.py` for secret redaction.
-- `config_loader.py` as a clean settings loader utility.
-- Fail-closed news behavior using `news_fail_closed`.
-- Calendar cache controls: `calendar_cache_max_age_hours` and `calendar_retry_after_min`.
-- `settings.json.example`.
-- `.gitignore`.
+- Risk-based position sizing (`risk_per_trade_usd`).
+- Daily risk cap (`daily_risk_cap_usd`).
+- `risk.py`, `startup_checks.py`, `reconcile_state.py`, `logging_utils.py`,
+  `config_loader.py`.
+- Fail-closed news filter behavior.
+- Calendar cache controls.
 
 ### Changed
-- Version changed from `Fiber EUR v1.0` to `Fiber EUR v1.3`.
-- Trade size is now calculated from money risk instead of blindly using fixed units.
-- Startup now validates core settings before trading.
-- Telegram trade-open alerts now use the actual calculated trade units.
-
-### Unchanged
-- EUR/USD only.
-- H4 → H1 → M15 → M5 cascade strategy.
-- London and NY sessions.
-- 15 pip SL and 25 pip TP.
-- Max 4 trades/day.
-- Max 1 open trade.
-- Conservative trading style.
+- Trade size calculated from money risk, not fixed units.
+- Startup validates core settings before trading.
+- London and US sessions only (Early Asia, Tokyo, US Cont. disabled).

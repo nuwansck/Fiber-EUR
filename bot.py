@@ -1,4 +1,4 @@
-"""bot.py — Fiber EUR v1.4 Trade Engine
+"""bot.py — Fiber EUR v1.5 Trade Engine
 ========================================
 Pair:      EUR/USD only
 Strategy:  4-Layer Cascade (H4 macro → H1 stack → M15 impulse → M5 pullback)
@@ -45,14 +45,14 @@ log = logging.getLogger(__name__)
 sg_tz   = pytz.timezone("Asia/Singapore")
 signals = SignalEngine()
 
-# SGD pip value: EUR/USD 1 pip ≈ USD 1/10k → SGD ~1.35 | 50k = SGD ~6.75/pip
-SGD_PER_PIP_PER_10K = 1.35  # default; overridden from settings['sgd_per_pip_per_10k']
+# Pip value: EUR/USD 1 pip ≈ USD 1/10k per unit (account currency: USD)
+SGD_PER_PIP_PER_10K = 1.35  # legacy name; USD pip value per 10k units — overridden from settings['sgd_per_pip_per_10k']
 
 _SETTINGS_PATH    = Path(__file__).parent / "settings.json"
 _DEFAULT_SETTINGS = {
     "signal_threshold":           4,
     "demo_mode":                  True,
-    "trade_units":                50000,  # fallback only; v1.3 uses risk_per_trade_usd
+    "trade_units":                50000,  # fallback only; risk_per_trade_usd drives sizing
     "risk_per_trade_usd":         75,
     "daily_risk_cap_usd":         225,
     "pip_value_per_10k":          1.0,
@@ -321,12 +321,13 @@ def detect_sl_tp_hits(state: dict, trader: OandaTrader, alert: TelegramAlert) ->
                 # ── Write to trade_history.json (read by reporting.py) ──────
                 try:
                     from state_utils import TRADE_HISTORY_FILE, load_json, save_json
+                    _hist_now = datetime.now(sg_tz)   # `now` is not in scope here; define locally
                     history = load_json(TRADE_HISTORY_FILE, [])
                     entry_price_rec = float(trade.get("price", 0))
                     history.append({
                         "status":          "FILLED",
-                        "timestamp_sgt":   now.strftime("%Y-%m-%d %H:%M:%S"),
-                        "closed_at_sgt":   now.strftime("%Y-%m-%d %H:%M:%S"),
+                        "timestamp_sgt":   _hist_now.strftime("%Y-%m-%d %H:%M:%S"),
+                        "closed_at_sgt":   _hist_now.strftime("%Y-%m-%d %H:%M:%S"),
                         "session":         state.get("last_session", "Unknown"),
                         "direction":       state.get("last_trade_direction", ""),
                         "score":           state.get("last_trade_score", 0),
@@ -401,7 +402,7 @@ def run_bot(state: dict) -> None:
 
     # Pull trade parameters from settings (single source of truth)
     pair_cfg         = settings.get("pair_sl_tp", {}).get("EUR_USD", {})
-    # v1.3: trade size is calculated per trade from risk_per_trade_usd.
+    # Trade size is calculated per trade from risk_per_trade_usd.
     FALLBACK_TRADE_SIZE = int(settings.get("trade_units", 50000))
     MAX_DURATION     = int(pair_cfg.get("max_duration_min", 45))
     COOLDOWN_MIN     = int(settings.get("loss_streak_cooldown_min", 30))
@@ -528,7 +529,7 @@ def run_bot(state: dict) -> None:
         log.info("LOSS CAP: %d/%d losses today — done for the day", losses_today, MAX_LOSSES_DAY)
         return
 
-    # v1.3 daily cumulative risk cap
+    # Daily cumulative risk cap
     _daily_cap = float(settings.get("daily_risk_cap_usd", 0))
     _daily_used = float(state.get("daily_risk_used_usd", 0.0))
     if _daily_cap > 0 and _daily_used >= _daily_cap:
@@ -543,7 +544,7 @@ def run_bot(state: dict) -> None:
         if pos:
             dirn    = "BUY" if int(float(pos.get("long", {}).get("units", 0))) > 0 else "SELL"
             pnl_sgd = usd_to_sgd(trader.check_pnl(pos))
-            log.info("%s: %s open | unrealised SGD %s", name, dirn, pnl_sgd)
+            log.info("%s: %s open | unrealised $%s", name, dirn, pnl_sgd)
             continue
 
         if in_cooldown(state, name, COOLDOWN_MIN):
@@ -600,7 +601,7 @@ def run_bot(state: dict) -> None:
         if score < threshold or direction == "NONE":
             continue
 
-        # Place trade — v1.3 risk-based sizing, daily risk cap, and margin guard
+        # Place trade — risk-based sizing, daily risk cap, and margin guard
         use_sl = cfg["stop_pips"]
         use_tp = cfg["tp_pips"]
         account_summary = trader.get_account_summary()

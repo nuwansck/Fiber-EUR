@@ -1,4 +1,4 @@
-"""main.py — Fiber EUR v1.4 Railway Entry Point
+"""main.py — Fiber EUR v1.5 Railway Entry Point
 ================================================
 EUR/USD Multi-Session Conservative Cascade Bot
 

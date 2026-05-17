@@ -1,6 +1,6 @@
-# Fiber EUR v1.3.2
+# Fiber EUR v1.5
 
-Fiber EUR v1.3.2 keeps the original EUR v1.0 conservative 4-layer cascade strategy:
+Fiber EUR v1.5 keeps the original EUR v1.0 conservative 4-layer cascade strategy:
 
 - H4 macro trend
 - H1 trend stack
@@ -12,9 +12,9 @@ Fiber EUR v1.3.2 keeps the original EUR v1.0 conservative 4-layer cascade strate
 
 ## What changed from v1.0
 
-v1.3 does **not** change the core strategy. It improves safety and production readiness:
+v1.5 does **not** change the core strategy. It improves safety and production readiness:
 
-| Area | v1.3 Improvement |
+| Area | Change |
 |---|---|
 | Risk per trade | Added `$75` money-risk sizing |
 | Daily risk cap | Added `$225` daily exposure cap |
@@ -28,7 +28,7 @@ v1.3 does **not** change the core strategy. It improves safety and production re
 
 ## Risk settings
 
-Default v1.3 risk settings:
+Default risk settings:
 
 ```json
 {
@@ -65,9 +65,9 @@ London + US only (SGT / UTC+8):
 
 Early Asia, Tokyo, and US Cont. are disabled for EUR/USD to avoid low-liquidity/noisy hours.
 
-## v1.3.2 weekend guard
+## Weekend guard (Mon–Fri only)
 
-This build trades/scans on **SGT Monday–Friday only**. Sunday and Saturday session-open alerts are disabled even if the clock matches a configured session window.
+The bot trades/scans on **SGT Monday–Friday only**. Sunday and Saturday session-open alerts are disabled even if the clock matches a configured session window.
 
 Active sessions remain:
 

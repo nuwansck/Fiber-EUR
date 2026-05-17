@@ -1,4 +1,4 @@
-"""oanda_trader.py — Fiber EUR v1.3 OANDA Trade Executor
+"""oanda_trader.py — Fiber EUR v1.5 OANDA Trade Executor
 Handles login, pricing, position management, order placement, and position close.
 SL and TP are set automatically on every market order.
 Supports both demo (fxpractice) and live (fxtrade) environments.
